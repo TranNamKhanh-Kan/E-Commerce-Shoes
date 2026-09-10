@@ -1,6 +1,6 @@
-﻿namespace DAL.IRepository
+﻿namespace BAL.IService
 {
-    public interface IOrderRepository
+    public interface IOrderService
     {
         void CreateOrder();
         void UpdateOrder();

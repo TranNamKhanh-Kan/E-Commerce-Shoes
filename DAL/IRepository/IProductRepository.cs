@@ -1,13 +1,16 @@
-﻿namespace DAL.IRepository
+﻿using DAL.DTO;
+using DAL.Entities;
+
+namespace DAL.IRepository
 {
     public interface IProductRepository
     {
-        void CreateProduct();
+        Product CreateProduct(ProductRequest createProduct);
 
-        void UpdateProductById(Guid id);
+        Product UpdateProductById(Guid id, ProductRequest updateProduct);
 
-        void GetAllProduct();
+        List<Product> GetAllProduct();
 
-        void GetProductById(Guid id);
+        Product GetProductById(Guid id);
     }
 }
