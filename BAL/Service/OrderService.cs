@@ -1,4 +1,5 @@
 ﻿using BAL.IService;
+using DAL.DTO;
 using DAL.IRepository;
 
 namespace BAL.Service
@@ -11,9 +12,10 @@ namespace BAL.Service
         {
             _repo = repo;
         }
-        public void CreateOrder()
+
+        public object CreateOrder(OrderCreateDTO request)
         {
-            throw new NotImplementedException();
+            return _repo.CreateOrder(request);
         }
 
         public List<object> GetAllOrder()
@@ -21,9 +23,9 @@ namespace BAL.Service
             return _repo.GetAllOrder();
         }
 
-        public void GetAllOrderById(Guid id)
+        public object GetOrderById(Guid id)
         {
-            throw new NotImplementedException();
+            return _repo.GetOrderById(id);
         }
 
         public List<object> GetOrderByUserId(Guid id)
@@ -31,9 +33,14 @@ namespace BAL.Service
             return _repo.GetOrderByUserId(id);
         }
 
-        public void UpdateOrder()
+        public object UpdateOrder(Guid orderId, OrderUpdateDTO request)
         {
-            throw new NotImplementedException();
+            return _repo.UpdateOrder(orderId, request);
+        }
+
+        public bool CancelOrder(Guid orderId)
+        {
+            return _repo.CancelOrder(orderId);
         }
     }
 }

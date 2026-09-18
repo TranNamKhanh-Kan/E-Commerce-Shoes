@@ -24,4 +24,6 @@ public partial class Product
     public string ImageUrl { get; set; }
 
     public virtual ICollection<OrderDetail> OrderDetails { get; set; } = new List<OrderDetail>();
+
+    public virtual ICollection<CartItem> CartItems { get; set; } = new List<CartItem>();
 }

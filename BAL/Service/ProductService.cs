@@ -1,4 +1,5 @@
 ﻿using BAL.IService;
+using DAL.DTO;
 using DAL.Entities;
 using DAL.IRepository;
 
@@ -7,13 +8,15 @@ namespace BAL.Service
     public class ProductService : IProductService
     {
         private readonly IProductRepository _repo;
+
         public ProductService(IProductRepository repo)
         {
             _repo = repo;
         }
-        public void CreateProduct()
+
+        public Product CreateProduct(ProductRequest createProduct)
         {
-            throw new NotImplementedException();
+            return _repo.CreateProduct(createProduct);
         }
 
         public List<Product> GetAllProduct()
@@ -21,14 +24,24 @@ namespace BAL.Service
             return _repo.GetAllProduct();
         }
 
-        public void GetProductById(Guid id)
+        public Product GetProductById(Guid id)
         {
-            throw new NotImplementedException();
+            return _repo.GetProductById(id);
         }
 
-        public void UpdateProductById(Guid id)
+        public Product UpdateProductById(Guid id, ProductRequest updateProduct)
         {
-            throw new NotImplementedException();
+            return _repo.UpdateProductById(id, updateProduct);
+        }
+
+        public bool DeleteProduct(Guid id)
+        {
+            return _repo.DeleteProduct(id);
+        }
+
+        public List<Product> SearchProducts(string? keyword, string? type, string? status)
+        {
+            return _repo.SearchProducts(keyword, type, status);
         }
     }
 }

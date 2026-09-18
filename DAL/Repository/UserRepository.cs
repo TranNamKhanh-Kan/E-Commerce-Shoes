@@ -15,20 +15,20 @@ namespace DAL.Repository
 
         public User CreateNewUser(UserRegisterDTO newUser)
         {
-            if (newUser != null)
-            {
-                var user = new User();
-                user.UserId = Guid.NewGuid();
-                user.FullName = newUser.FullName;
-                user.Email = newUser.Email;
-                user.Password = BCrypt.Net.BCrypt.HashPassword(newUser.Password);
-                user.RoleId = 3;
-                _db.Users.Add(user);
-                _db.SaveChanges();
-                return user;
-            }
-            return null;
+            if (newUser == null) return null;
 
+            var user = new User
+            {
+                UserId = Guid.NewGuid(),
+                FullName = newUser.FullName,
+                Email = newUser.Email,
+                Phone = newUser.Phone,
+                Password = BCrypt.Net.BCrypt.HashPassword(newUser.Password),
+                RoleId = 3
+            };
+            _db.Users.Add(user);
+            _db.SaveChanges();
+            return user;
         }
 
         public List<Role> GetRole()
@@ -39,12 +39,10 @@ namespace DAL.Repository
         public User GetUser(string email, string password)
         {
             var user = GetUserByEmail(email);
+            if (user == null) return null;
+
             bool valid = BCrypt.Net.BCrypt.Verify(password, user.Password);
-            if (user != null && valid)
-            {
-                return user;
-            }
-            return null;
+            return valid ? user : null;
         }
 
         public User GetUserByEmail(string email)
@@ -65,19 +63,21 @@ namespace DAL.Repository
         public User UpdateNewUser(UpdateUserDTO updateUser)
         {
             var user = _db.Users.FirstOrDefault(u => u.UserId == updateUser.UserId);
-            if (user != null)
-            {
-                user.RoleId = updateUser.RoleId;
-                user.FullName = updateUser.FullName;
-                user.Email = updateUser.Email;
-                user.Password = BCrypt.Net.BCrypt.HashPassword(updateUser.Password);
-                user.Phone = updateUser.Phone;
-                _db.Users.Update(user);
-                _db.SaveChanges();
-                return user;
-            }
-            return null;
+            if (user == null) return null;
 
+            if (updateUser.RoleId > 0)
+                user.RoleId = updateUser.RoleId;
+            if (!string.IsNullOrWhiteSpace(updateUser.FullName))
+                user.FullName = updateUser.FullName;
+            if (!string.IsNullOrWhiteSpace(updateUser.Email))
+                user.Email = updateUser.Email;
+            if (!string.IsNullOrWhiteSpace(updateUser.Phone))
+                user.Phone = updateUser.Phone;
+            if (!string.IsNullOrWhiteSpace(updateUser.Password))
+                user.Password = BCrypt.Net.BCrypt.HashPassword(updateUser.Password);
+
+            _db.SaveChanges();
+            return user;
         }
     }
 }

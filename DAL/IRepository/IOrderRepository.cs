@@ -1,13 +1,15 @@
-﻿namespace DAL.IRepository
+﻿using DAL.DTO;
+using DAL.Entities;
+
+namespace DAL.IRepository
 {
     public interface IOrderRepository
     {
-        void CreateOrder();
-        void UpdateOrder();
-        void GetAllOrderById(Guid id);
-
+        object CreateOrder(OrderCreateDTO request);
+        object UpdateOrder(Guid orderId, OrderUpdateDTO request);
+        object GetOrderById(Guid id);
         List<object> GetAllOrder();
-
         List<object> GetOrderByUserId(Guid id);
+        bool CancelOrder(Guid orderId);
     }
 }

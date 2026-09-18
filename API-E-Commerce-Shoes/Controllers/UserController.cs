@@ -3,6 +3,7 @@ using DAL.DTO;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Net.Mail;
+using System.Security.Claims;
 
 namespace API_E_Commerce_Shoes.Controllers
 {
@@ -20,7 +21,6 @@ namespace API_E_Commerce_Shoes.Controllers
             try
             {
                 var mailAddress = new MailAddress(email);
-
                 return mailAddress.Address == email.Trim();
             }
             catch
@@ -45,6 +45,7 @@ namespace API_E_Commerce_Shoes.Controllers
             _userService = userService;
             _jwtService = jWTService;
         }
+
         [HttpGet("role")]
         public IActionResult GetRoles()
         {
@@ -54,50 +55,82 @@ namespace API_E_Commerce_Shoes.Controllers
         [HttpPost("register")]
         public IActionResult Register(UserRegisterDTO registerDTO)
         {
-
             if (!IsValidEmail(registerDTO.Email))
-            {
                 return BadRequest("Invalid mail");
-            }
-            else if (_userService.GetUserByEmail(registerDTO.Email) != null)
-            {
-                return BadRequest("Email Exited");
-            }
-            else if (!IsValidPassword(registerDTO.Password))
-            {
+            if (_userService.GetUserByEmail(registerDTO.Email) != null)
+                return BadRequest("Email Existed");
+            if (!IsValidPassword(registerDTO.Password))
                 return BadRequest("Invalid password");
-            }
-            return Ok(_userService.CreateNewUser(registerDTO));
+
+            var user = _userService.CreateNewUser(registerDTO);
+            return Ok(UserResponse.FromEntity(user));
         }
 
         [HttpPost("login")]
         public IActionResult Login(LoginDTO login)
         {
             var user = _userService.GetUser(login.email, login.password);
-            if (user != null)
+            if (user == null)
+                return BadRequest("Login fail");
+
+            return Ok(new
             {
-                return Ok(new { user, token = _jwtService.GenerateToken(user.Email, user.RoleId) });
-            }
-            return BadRequest("Login fail");
+                user = UserResponse.FromEntity(user),
+                token = _jwtService.GenerateToken(user.Email, user.RoleId)
+            });
         }
+
         [HttpPut("update-user")]
         [Authorize]
         public IActionResult UpdateUser(UpdateUserDTO updateUser)
         {
-            return Ok(_userService.UpdateNewUser(updateUser));
+            var user = _userService.UpdateNewUser(updateUser);
+            if (user == null) return NotFound("User not found");
+            return Ok(UserResponse.FromEntity(user));
         }
 
         [HttpGet("get-user-by-email")]
         [Authorize]
-        public IActionResult GetUserByEmail([FromBody] string email)
+        public IActionResult GetUserByEmail([FromQuery] string email)
         {
-            return Ok(_userService.GetUserByEmail(email));
+            var user = _userService.GetUserByEmail(email);
+            if (user == null) return NotFound("User not found");
+            return Ok(UserResponse.FromEntity(user));
         }
+
+        [HttpGet("get-user-by-id/{id:guid}")]
+        [Authorize]
+        public IActionResult GetUserById(Guid id)
+        {
+            var user = _userService.GetUserById(id);
+            if (user == null) return NotFound("User not found");
+            return Ok(UserResponse.FromEntity(user));
+        }
+
+        [HttpGet("me")]
+        [Authorize]
+        public IActionResult GetCurrentUser()
+        {
+            var email = User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? User.FindFirstValue("sub")
+                ?? User.FindFirstValue(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub);
+
+            if (string.IsNullOrEmpty(email))
+                return Unauthorized();
+
+            var user = _userService.GetUserByEmail(email);
+            if (user == null) return NotFound("User not found");
+            return Ok(UserResponse.FromEntity(user));
+        }
+
         [HttpGet("get-all-user")]
         [Authorize(Roles = "1")]
         public IActionResult GetAllUser()
         {
-            return Ok(_userService.GetAllUser());
+            var users = _userService.GetAllUser()
+                .Select(UserResponse.FromEntity)
+                .ToList();
+            return Ok(users);
         }
     }
 }

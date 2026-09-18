@@ -1,5 +1,4 @@
-﻿
-using BAL.IService;
+﻿using BAL.IService;
 using BAL.Service;
 using DAL.Entities;
 using DAL.IRepository;
@@ -18,13 +17,9 @@ namespace API_E_Commerce_Shoes
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
-
             builder.Services.AddDbContext<ECommerceShoesContext>(option =>
-            option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"))
-            );
+                option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-            //JWT
             builder.Services.AddScoped<IJWTService, JWTService>();
             builder.Services.AddAuthentication(options =>
             {
@@ -41,41 +36,44 @@ namespace API_E_Commerce_Shoes
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = builder.Configuration["Jwt:Issuer"],
                     ValidAudience = builder.Configuration["Jwt:Audience"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
-                };
-                options.Events = new JwtBearerEvents
-                {
-                    OnMessageReceived = context =>
-                    {
-                        context.Token = context.Request.Headers["Authorization"]
-                            .FirstOrDefault();
-
-                        return Task.CompletedTask;
-                    }
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)),
+                    RoleClaimType = System.Security.Claims.ClaimTypes.Role
                 };
             });
 
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowFrontend", policy =>
+                {
+                    policy.AllowAnyHeader()
+                          .AllowAnyMethod()
+                          .AllowAnyOrigin();
+                });
+            });
+
             builder.Services.AddControllers();
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
 
-            //o khoa
             builder.Services.AddSwaggerGen(options =>
             {
-                options.SwaggerDoc("v1", new OpenApiInfo { Title = "My API", Version = "v1" });
+                options.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title = "E-Commerce Shoes API",
+                    Version = "v1",
+                    Description = "API bán giày: User, Product, Cart, Order"
+                });
 
-                // 1. Định nghĩa cơ chế bảo mật JWT (Bearer) cho Swagger
                 options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
                 {
                     In = ParameterLocation.Header,
-                    Description = "Vui lòng nhập Token theo định dạng: {your_jwt_token}",
+                    Description = "Nhập JWT token. Ví dụ: Bearer {token}",
                     Name = "Authorization",
-                    Type = SecuritySchemeType.ApiKey,
+                    Type = SecuritySchemeType.Http,
                     BearerFormat = "JWT",
                     Scheme = "Bearer"
                 });
 
-                // 2. Áp dụng cơ chế bảo mật này vào tất cả các API yêu cầu xác thực
                 options.AddSecurityRequirement(new OpenApiSecurityRequirement
                 {
                     {
@@ -92,19 +90,17 @@ namespace API_E_Commerce_Shoes
                 });
             });
 
-
-            builder.Services.AddSwaggerGen();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IUserService, UserService>();
             builder.Services.AddScoped<IProductRepository, ProductRepository>();
             builder.Services.AddScoped<IProductService, ProductService>();
             builder.Services.AddScoped<IOrderRepository, OrderRepository>();
             builder.Services.AddScoped<IOrderService, OrderService>();
-
+            builder.Services.AddScoped<ICartRepository, CartRepository>();
+            builder.Services.AddScoped<ICartService, CartService>();
 
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -112,13 +108,10 @@ namespace API_E_Commerce_Shoes
             }
 
             app.UseHttpsRedirection();
-
+            app.UseCors("AllowFrontend");
             app.UseAuthentication();
             app.UseAuthorization();
-
-
             app.MapControllers();
-
             app.Run();
         }
     }
