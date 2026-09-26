@@ -73,10 +73,24 @@ namespace API_E_Commerce_Shoes.Controllers
             if (user == null)
                 return BadRequest("Login fail");
 
+           var token = _jwtService.GenerateToken(user.Email, user.RoleId);
+
+            Response.Cookies.Append(
+                "access_token",
+                token,
+                new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = true,
+                    SameSite = SameSiteMode.None,
+                    Path = "/"
+                }
+            );
+
             return Ok(new
             {
-                user = UserResponse.FromEntity(user),
-                token = _jwtService.GenerateToken(user.Email, user.RoleId)
+                message = "Login success",
+                access_token = token
             });
         }
 

@@ -40,15 +40,24 @@ namespace API_E_Commerce_Shoes
                         Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)),
                     RoleClaimType = System.Security.Claims.ClaimTypes.Role
                 };
+                options.Events = new JwtBearerEvents
+                {
+                    OnMessageReceived = context =>
+                    {
+                        context.Token = context.Request.Cookies["access_token"];
+                        return Task.CompletedTask;
+                    }
+                };
             });
 
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowFrontend", policy =>
                 {
-                    policy.AllowAnyHeader()
+                    policy.WithOrigins("http://localhost:5173")
+                          .AllowAnyHeader()
                           .AllowAnyMethod()
-                          .AllowAnyOrigin();
+                          .AllowCredentials();
                 });
             });
 
