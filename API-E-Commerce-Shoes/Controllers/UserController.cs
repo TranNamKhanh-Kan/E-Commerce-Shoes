@@ -94,6 +94,24 @@ namespace API_E_Commerce_Shoes.Controllers
             });
         }
 
+
+        [HttpPost("logout")]
+        public IActionResult Logout()
+        {
+            Response.Cookies.Delete("access_token", new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.None,
+                Path = "/"
+            });
+
+            return Ok(new
+            {
+                message = "Logged out"
+            });
+        }
+
         [HttpPut("update-user")]
         [Authorize]
         public IActionResult UpdateUser(UpdateUserDTO updateUser)

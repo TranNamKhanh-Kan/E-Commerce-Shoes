@@ -31,29 +31,53 @@ namespace API_E_Commerce_Shoes.Controllers
         }
 
         [HttpGet("search")]
-        public IActionResult Search(string? keyword,string? type,string? status)
+        public IActionResult Search(string? keyword, string? type, string? status)
         {
             return Ok(_service.SearchProducts(keyword, type, status));
         }
 
+        /// <summary>
+        /// Tạo sản phẩm. Gửi multipart/form-data với field Image (file).
+        /// ImageUrl trong DB sẽ là SecureUrl từ Cloudinary.
+        /// </summary>
         [HttpPost("create-product")]
         [Authorize(Roles = "1,2")]
-        public IActionResult CreateProduct([FromBody] ProductRequest request)
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> CreateProduct([FromForm] ProductRequest request, IFormFile image)
         {
             if (request == null || string.IsNullOrWhiteSpace(request.Name))
                 return BadRequest("Invalid product data");
 
-            var product = _service.CreateProduct(request);
-            return Ok(product);
+            try
+            {
+                var product = await _service.CreateProduct(request, image);
+                return Ok(product);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
+        /// <summary>
+        /// Cập nhật sản phẩm. Nếu gửi Image mới thì upload Cloudinary và cập nhật ImageUrl;
+        /// nếu không gửi Image thì giữ ImageUrl cũ.
+        /// </summary>
         [HttpPut("update-product/{id:guid}")]
         [Authorize(Roles = "1,2")]
-        public IActionResult UpdateProduct(Guid id, [FromBody] ProductRequest request)
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> UpdateProduct(Guid id, [FromForm] ProductRequest request, IFormFile? image)
         {
-            var product = _service.UpdateProductById(id, request);
-            if (product == null) return NotFound("Product not found");
-            return Ok(product);
+            try
+            {
+                var product = await _service.UpdateProductById(id, request, image);
+                if (product == null) return NotFound("Product not found");
+                return Ok(product);
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(ex.Message);
+            }
         }
 
         [HttpDelete("delete-product/{id:guid}")]

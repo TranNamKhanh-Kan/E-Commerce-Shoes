@@ -1,5 +1,6 @@
 ﻿using BAL.IService;
 using BAL.Service;
+using CloudinaryDotNet;
 using DAL.Entities;
 using DAL.IRepository;
 using DAL.Repository;
@@ -19,7 +20,7 @@ namespace API_E_Commerce_Shoes
 
             builder.Services.AddDbContext<ECommerceShoesContext>(option =>
                 option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
+            //JWT
             builder.Services.AddScoped<IJWTService, JWTService>();
             builder.Services.AddAuthentication(options =>
             {
@@ -49,7 +50,19 @@ namespace API_E_Commerce_Shoes
                     }
                 };
             });
+            //Cloudinary
+            var cloudName = builder.Configuration["Cloudinary:CloudName"];
+            var apiKey = builder.Configuration["Cloudinary:ApiKey"];
+            var apiSecret = builder.Configuration["Cloudinary:ApiSecret"];
 
+            var account = new Account(cloudName, apiKey, apiSecret);
+            var cloudinary = new Cloudinary(account)
+            {
+                Api = { Secure = true }
+            };
+            builder.Services.AddSingleton<ICloudinary>(cloudinary);
+
+            //
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowFrontend", policy =>

@@ -46,13 +46,14 @@ namespace DAL.Repository
             var prod = _db.Products.SingleOrDefault(p => p.ProductId == id);
             if (prod == null) return null;
 
-            prod.Type = updateProduct.Type;
-            prod.Quantity = updateProduct.Quantity;
-            prod.Price = updateProduct.Price;
-            prod.Size = updateProduct.Size;
-            prod.Status = updateProduct.Status;
-            prod.ImageUrl = updateProduct.ImageUrl;
-            prod.Name = updateProduct.Name;
+            prod.Type = updateProduct.Type ?? prod.Type;
+            prod.Quantity = updateProduct.Quantity ?? prod.Quantity;
+            prod.Price = updateProduct.Price ?? prod.Price;
+            prod.Size = updateProduct.Size ?? prod.Size;
+            prod.Status = updateProduct.Status ?? prod.Status;
+            prod.ImageUrl = updateProduct.ImageUrl ?? prod.ImageUrl;
+            prod.PublicId = updateProduct.PublicId ?? prod.PublicId;
+            prod.Name = updateProduct.Name ?? prod.Name;
             _db.SaveChanges();
             return prod;
         }

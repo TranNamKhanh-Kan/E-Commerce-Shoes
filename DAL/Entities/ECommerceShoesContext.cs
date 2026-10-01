@@ -31,29 +31,36 @@ public partial class ECommerceShoesContext : DbContext
     {
         modelBuilder.Entity<Cart>(entity =>
         {
-            entity.HasKey(e => e.CartId);
+            entity.HasKey(e => e.CartId).HasName("PK__Cart__51BCD7B7E579AAE2");
+
             entity.ToTable("Cart");
+
+            entity.HasIndex(e => e.UserId, "UQ_Cart_UserId").IsUnique();
+
             entity.Property(e => e.CartId).ValueGeneratedNever();
             entity.Property(e => e.CreatedAt).HasColumnType("datetime");
-            entity.HasIndex(e => e.UserId).IsUnique();
 
             entity.HasOne(d => d.User).WithOne(p => p.Cart)
                 .HasForeignKey<Cart>(d => d.UserId)
-                .OnDelete(DeleteBehavior.ClientSetNull);
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_Cart_User");
         });
 
         modelBuilder.Entity<CartItem>(entity =>
         {
             entity.HasKey(e => new { e.CartId, e.ProductId });
+
             entity.ToTable("CartItem");
 
             entity.HasOne(d => d.Cart).WithMany(p => p.CartItems)
                 .HasForeignKey(d => d.CartId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_CartItem_Cart");
 
             entity.HasOne(d => d.Product).WithMany(p => p.CartItems)
                 .HasForeignKey(d => d.ProductId)
-                .OnDelete(DeleteBehavior.ClientSetNull);
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_CartItem_Product");
         });
 
         modelBuilder.Entity<Order>(entity =>
@@ -98,6 +105,7 @@ public partial class ECommerceShoesContext : DbContext
             entity.Property(e => e.ProductId).ValueGeneratedNever();
             entity.Property(e => e.ImageUrl).IsUnicode(false);
             entity.Property(e => e.Name).HasMaxLength(255);
+            entity.Property(e => e.PublicId).HasMaxLength(255);
             entity.Property(e => e.Size).HasMaxLength(100);
             entity.Property(e => e.Status).HasMaxLength(50);
             entity.Property(e => e.Type).HasMaxLength(255);

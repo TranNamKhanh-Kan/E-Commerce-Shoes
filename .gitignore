@@ -19,6 +19,7 @@ packages/
 !.env.example
 
 # ASP.NET
+appsettings.json
 appsettings.Development.json
 
 # Node
